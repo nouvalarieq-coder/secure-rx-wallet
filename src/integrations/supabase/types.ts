@@ -14,16 +14,239 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      fake_drug_reports: {
+        Row: {
+          created_at: string
+          id: string
+          medicine_id: string | null
+          query_type: string
+          query_value: string
+          result: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medicine_id?: string | null
+          query_type: string
+          query_value: string
+          result: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medicine_id?: string | null
+          query_type?: string
+          query_value?: string
+          result?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fake_drug_reports_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medicines: {
+        Row: {
+          bpom_number: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          manufacturer: string | null
+          name: string
+          price: number
+          qr_code: string | null
+          requires_prescription: boolean
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          bpom_number?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          manufacturer?: string | null
+          name: string
+          price?: number
+          qr_code?: string | null
+          requires_prescription?: boolean
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          bpom_number?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          manufacturer?: string | null
+          name?: string
+          price?: number
+          qr_code?: string | null
+          requires_prescription?: boolean
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          medicine_id: string
+          medicine_name: string
+          order_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medicine_id: string
+          medicine_name: string
+          order_id: string
+          quantity: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medicine_id?: string
+          medicine_name?: string
+          order_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          id: string
+          payment_method: string
+          payment_status: string
+          shipping_address: string | null
+          total_amount: number
+          tx_signature: string | null
+          updated_at: string
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payment_method: string
+          payment_status?: string
+          shipping_address?: string | null
+          total_amount: number
+          tx_signature?: string | null
+          updated_at?: string
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payment_status?: string
+          shipping_address?: string | null
+          total_amount?: number
+          tx_signature?: string | null
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          wallet_address: string | null
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+          wallet_address?: string | null
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +373,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
