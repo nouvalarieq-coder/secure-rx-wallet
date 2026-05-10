@@ -60,7 +60,8 @@ export default function Auth() {
     });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Akun berhasil dibuat. Silakan cek email untuk verifikasi.");
+    toast.success("Akun berhasil dibuat. Selamat datang!");
+    navigate("/marketplace");
   };
 
   const onGoogle = async () => {
