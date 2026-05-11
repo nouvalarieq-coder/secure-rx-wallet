@@ -30,7 +30,7 @@ export default function Header() {
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
             <Pill className="h-5 w-5" />
           </span>
-          <span>MediCrypto</span>
+          <span>SolMedika</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
