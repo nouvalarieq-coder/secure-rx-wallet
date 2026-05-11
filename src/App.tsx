@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { WalletProvider } from "@/contexts/WalletContext";
 import { RequireAuth, RequireAdmin } from "@/components/auth/RouteGuards";
 
 import Index from "./pages/Index";
@@ -26,6 +27,7 @@ const App = () => (
       <Sonner position="top-right" richColors />
       <BrowserRouter>
         <AuthProvider>
+          <WalletProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -38,6 +40,7 @@ const App = () => (
             <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </WalletProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

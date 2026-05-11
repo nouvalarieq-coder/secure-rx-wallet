@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
+import WalletButton from "@/components/wallet/WalletButton";
 
 const links = [
   { to: "/marketplace", label: "Marketplace" },
@@ -49,6 +50,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <div className="hidden sm:block"><WalletButton /></div>
           <Button variant="ghost" size="icon" onClick={() => navigate("/cart")} className="relative">
             <ShoppingCart className="h-5 w-5" />
             {count > 0 && (
