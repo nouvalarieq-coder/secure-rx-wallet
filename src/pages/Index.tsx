@@ -74,7 +74,7 @@ export default function Index() {
               Apotek + Web3 di Indonesia
             </span>
             <h1 className="mt-6 font-display text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-tight">
-              Obat Asli, <span className="bg-gradient-primary bg-clip-text text-transparent">Pembayaran Crypto</span> yang Aman.
+              Obat Asli, Pembayaran yang Aman.
             </h1>
             <p className="mt-5 text-lg text-muted-foreground max-w-xl">
               MediCrypto menghadirkan marketplace obat resmi BPOM dengan opsi bayar fiat
