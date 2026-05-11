@@ -9,7 +9,7 @@ export default function Footer() {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-primary text-primary-foreground">
               <Pill className="h-4 w-4" />
             </span>
-            MediCrypto
+            SolMedika
           </div>
           <p className="mt-3 text-muted-foreground max-w-xs">
             Apotek online resmi BPOM dengan pembayaran aman via fiat & crypto Solana.
@@ -33,7 +33,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-border/60 py-4 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} MediCrypto. Semua transaksi crypto berjalan di Solana Devnet.
+        © {new Date().getFullYear()} SolMedika. Semua transaksi crypto berjalan di Solana Devnet.
       </div>
     </footer>
   );

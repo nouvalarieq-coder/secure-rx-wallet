@@ -77,7 +77,7 @@ export default function Index() {
               Obat Asli, Pembayaran yang Aman.
             </h1>
             <p className="mt-5 text-lg text-muted-foreground max-w-xl">
-              MediCrypto menghadirkan marketplace obat resmi BPOM dengan opsi bayar fiat
+              SolMedika menghadirkan marketplace obat resmi BPOM dengan opsi bayar fiat
               maupun crypto Solana. Semua transaksi tercatat di blockchain.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -191,7 +191,7 @@ export default function Index() {
       <section className="container py-16 md:py-20">
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="font-display text-3xl md:text-4xl font-bold">Cara Kerja</h2>
-          <p className="mt-3 text-muted-foreground">Tiga langkah mudah berbelanja obat dengan MediCrypto.</p>
+          <p className="mt-3 text-muted-foreground">Tiga langkah mudah berbelanja obat dengan SolMedika.</p>
         </div>
         <div className="mt-12 grid md:grid-cols-3 gap-8 relative">
           {steps.map((s, i) => (
