@@ -209,7 +209,7 @@ export default function Checkout() {
               {method === "crypto" ? "Bayar dengan Solana" : "Bayar Sekarang"}
             </Button>
             <p className="text-[11px] text-muted-foreground mt-3 text-center">
-              Dengan melanjutkan, Anda menyetujui Syarat & Ketentuan SolMedika.
+              Dengan melanjutkan, Anda menyetujui Syarat & Ketentuan MediCryp.
             </p>
           </Card>
         </div>
