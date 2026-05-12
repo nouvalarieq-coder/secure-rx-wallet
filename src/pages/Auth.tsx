@@ -137,6 +137,13 @@ export default function Auth() {
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24"><path fill="#4285f4" d="M22.5 12.3c0-.8-.1-1.4-.2-2.1H12v3.9h5.9c-.1.9-.7 2.4-2.1 3.4l3.3 2.6c2-1.8 3.4-4.5 3.4-7.8z"/><path fill="#34a853" d="M12 23c2.8 0 5.2-.9 6.9-2.5l-3.3-2.6c-.9.6-2.1 1-3.6 1-2.8 0-5.1-1.8-5.9-4.4l-3.4 2.6C4.4 20.4 7.9 23 12 23z"/><path fill="#fbbc04" d="M6.1 14.5c-.2-.6-.3-1.2-.3-1.9s.1-1.3.3-1.9L2.7 8.1C2 9.5 1.6 11 1.6 12.6s.4 3.1 1.1 4.5l3.4-2.6z"/><path fill="#ea4335" d="M12 6.3c1.6 0 2.7.7 3.3 1.3l2.4-2.4C16.2 3.8 14.4 3 12 3 7.9 3 4.4 5.6 2.7 8.1l3.4 2.6C7 8.1 9.2 6.3 12 6.3z"/></svg>
             Lanjut dengan Google
           </Button>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Anda admin?{" "}
+            <a href="/admin/login" className="text-primary font-medium hover:underline">
+              Masuk sebagai Admin
+            </a>
+          </p>
         </Card>
       </div>
     </Layout>
