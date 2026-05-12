@@ -171,31 +171,160 @@ function MedicinesTab() {
 
 function OrdersTab() {
   const [orders, setOrders] = useState<any[]>([]);
-  useEffect(() => { (async () => {
-    const { data } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(100);
-    setOrders(data ?? []);
-  })(); }, []);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "fiat" | "crypto">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "success" | "pending" | "failed">("all");
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200);
+    let rows = data ?? [];
+    const ids = Array.from(new Set(rows.map((r: any) => r.user_id)));
+    if (ids.length) {
+      const { data: profs } = await supabase.from("profiles").select("id, full_name, wallet_address").in("id", ids);
+      const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      rows = rows.map((r: any) => ({ ...r, profile: map.get(r.user_id) }));
+    }
+    setOrders(rows);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const filtered = orders.filter((o) =>
+    (filter === "all" || o.payment_method === filter) &&
+    (statusFilter === "all" || o.payment_status === statusFilter)
+  );
+
+  const totalRevenue = filtered.filter((o) => o.payment_status === "success").reduce((s, o) => s + Number(o.total_amount), 0);
+  const cryptoCount = filtered.filter((o) => o.payment_method === "crypto").length;
+  const fiatCount = filtered.filter((o) => o.payment_method === "fiat").length;
+
+  const exportCsv = () => {
+    const header = ["ID", "Tanggal", "Pembeli", "Metode", "Status", "Total (IDR)", "Wallet", "TX Signature", "Alamat", "Items"];
+    const rows = filtered.map((o) => [
+      o.id,
+      new Date(o.created_at).toLocaleString("id-ID"),
+      o.profile?.full_name ?? "-",
+      o.payment_method,
+      o.payment_status,
+      Number(o.total_amount),
+      o.wallet_address ?? "",
+      o.tx_signature ?? "",
+      (o.shipping_address ?? "").replace(/\n/g, " "),
+      (o.order_items ?? []).map((i: any) => `${i.quantity}x ${i.medicine_name}`).join(" | "),
+    ]);
+    const csv = [header, ...rows].map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `rekap-transaksi-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Rekap diunduh");
+  };
+
   const status = (s: string) => s === "success" ? <Badge className="bg-success text-success-foreground">Sukses</Badge> : s === "pending" ? <Badge className="bg-warning text-warning-foreground">Pending</Badge> : <Badge variant="destructive">Gagal</Badge>;
+
   return (
     <Card className="mt-4 p-5">
-      <h2 className="font-display font-bold mb-4">Transaksi Terbaru</h2>
-      <div className="overflow-auto">
-        <table className="w-full text-sm">
-          <thead><tr className="text-left text-muted-foreground border-b border-border"><th className="py-2 pr-4">ID</th><th className="pr-4">Tanggal</th><th className="pr-4">Metode</th><th className="pr-4">Total</th><th>Status</th></tr></thead>
-          <tbody>
-            {orders.map((o) => (
-              <tr key={o.id} className="border-b border-border/60">
-                <td className="py-3 pr-4 font-mono text-xs">{o.id.slice(0, 8)}</td>
-                <td className="pr-4">{new Date(o.created_at).toLocaleDateString("id-ID")}</td>
-                <td className="pr-4 capitalize">{o.payment_method}</td>
-                <td className="pr-4">{formatIDR(Number(o.total_amount))}</td>
-                <td>{status(o.payment_status)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid gap-3 sm:grid-cols-3 mb-5">
+        <div className="rounded-xl border border-border p-4 bg-gradient-card">
+          <div className="text-xs text-muted-foreground">Pendapatan (Sukses)</div>
+          <div className="font-display text-xl font-bold text-primary mt-1">{formatIDR(totalRevenue)}</div>
+        </div>
+        <div className="rounded-xl border border-border p-4">
+          <div className="text-xs text-muted-foreground">Transfer / E-Wallet</div>
+          <div className="font-display text-xl font-bold mt-1">{fiatCount}</div>
+        </div>
+        <div className="rounded-xl border border-border p-4">
+          <div className="text-xs text-muted-foreground">Crypto (Solana)</div>
+          <div className="font-display text-xl font-bold mt-1">{cryptoCount}</div>
+        </div>
       </div>
+
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <h2 className="font-display font-bold mr-auto">Rekap Transaksi</h2>
+        <select value={filter} onChange={(e) => setFilter(e.target.value as any)} className="h-9 rounded-md border border-border bg-background px-2 text-sm">
+          <option value="all">Semua Metode</option>
+          <option value="fiat">Transfer/E-Wallet</option>
+          <option value="crypto">Crypto</option>
+        </select>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="h-9 rounded-md border border-border bg-background px-2 text-sm">
+          <option value="all">Semua Status</option>
+          <option value="success">Sukses</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Gagal</option>
+        </select>
+        <Button size="sm" variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-1" />Export CSV</Button>
+      </div>
+
+      {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto my-8" /> : filtered.length === 0 ? (
+        <div className="text-center text-muted-foreground py-10 text-sm">Belum ada transaksi.</div>
+      ) : (
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-muted-foreground border-b border-border">
+              <th className="py-2 pr-2 w-6"></th><th className="pr-4">ID</th><th className="pr-4">Tanggal</th><th className="pr-4">Pembeli</th><th className="pr-4">Metode</th><th className="pr-4">Total</th><th>Status</th>
+            </tr></thead>
+            <tbody>
+              {filtered.map((o) => (
+                <FragmentRow key={o.id} o={o} expanded={expanded === o.id} onToggle={() => setExpanded(expanded === o.id ? null : o.id)} status={status} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </Card>
+  );
+}
+
+function FragmentRow({ o, expanded, onToggle, status }: any) {
+  return (
+    <>
+      <tr className="border-b border-border/60 hover:bg-secondary/30 cursor-pointer" onClick={onToggle}>
+        <td className="py-3 pl-2 pr-1"><ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} /></td>
+        <td className="py-3 pr-4 font-mono text-xs">{o.id.slice(0, 8)}</td>
+        <td className="pr-4">{new Date(o.created_at).toLocaleString("id-ID")}</td>
+        <td className="pr-4">{o.profile?.full_name ?? <span className="text-muted-foreground">-</span>}</td>
+        <td className="pr-4 capitalize">{o.payment_method}</td>
+        <td className="pr-4 font-semibold">{formatIDR(Number(o.total_amount))}</td>
+        <td>{status(o.payment_status)}</td>
+      </tr>
+      {expanded && (
+        <tr className="border-b border-border/60 bg-secondary/20">
+          <td></td>
+          <td colSpan={6} className="py-4 pr-4">
+            <div className="grid md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <div className="font-semibold text-sm mb-1">Item Pesanan</div>
+                <ul className="space-y-1">
+                  {(o.order_items ?? []).map((i: any) => (
+                    <li key={i.id} className="flex justify-between gap-3">
+                      <span>{i.quantity}× {i.medicine_name}</span>
+                      <span className="text-muted-foreground">{formatIDR(Number(i.unit_price) * i.quantity)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <div><span className="text-muted-foreground">Alamat: </span>{o.shipping_address ?? "-"}</div>
+                {o.wallet_address && (
+                  <div><span className="text-muted-foreground">Wallet pembeli: </span><span className="font-mono">{shortAddr(o.wallet_address, 6)}</span></div>
+                )}
+                {o.tx_signature && (
+                  <div>
+                    <span className="text-muted-foreground">TX: </span>
+                    <a href={explorerUrl(o.tx_signature)} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 font-mono">
+                      {shortAddr(o.tx_signature, 8)} <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
