@@ -38,6 +38,7 @@ const App = () => (
             <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
             <Route path="/orders" element={<RequireAuth><Orders /></RequireAuth>} />
             <Route path="/verify" element={<Verify />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
