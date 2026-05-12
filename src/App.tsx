@@ -16,6 +16,7 @@ import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Verify from "./pages/Verify";
 import Admin from "./pages/Admin";
+import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
