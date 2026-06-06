@@ -1,1 +1,7 @@
 project_id = "hqabdmvykyctkgszpftw"
+
+[functions.verify-solana-tx]
+verify_jwt = false
+
+[functions.wallet-info]
+verify_jwt = false
