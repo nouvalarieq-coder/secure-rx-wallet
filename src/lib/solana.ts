@@ -98,3 +98,33 @@ export async function verifyTransaction(signature: string): Promise<boolean> {
 export function explorerUrl(sig: string) {
   return `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
 }
+
+// Solana Memo Program ID (v2)
+const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+// Send a memo instruction (used to anchor a hash on-chain for product authenticity)
+export async function sendMemo(opts: {
+  walletName: WalletProvider;
+  fromPubkey: string;
+  memo: string;
+}): Promise<string> {
+  const provider = getProvider(opts.walletName);
+  if (!provider) throw new Error("Wallet tidak terhubung.");
+  const fromPk = new PublicKey(opts.fromPubkey);
+  const { blockhash } = await connection.getLatestBlockhash("confirmed");
+  const tx = new Transaction({ feePayer: fromPk, recentBlockhash: blockhash }).add({
+    keys: [{ pubkey: fromPk, isSigner: true, isWritable: true }],
+    programId: MEMO_PROGRAM_ID,
+    data: new TextEncoder().encode(opts.memo) as unknown as Buffer,
+  });
+  const signed = await provider.signAndSendTransaction(tx);
+  const signature: string = signed?.signature ?? signed;
+  await connection.confirmTransaction(signature, "confirmed");
+  return signature;
+}
+
+// SHA-256 hex digest of a string
+export async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
