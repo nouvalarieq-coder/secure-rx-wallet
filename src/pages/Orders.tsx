@@ -4,9 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Package, ExternalLink } from "lucide-react";
-import { formatIDR } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Loader2, Package, ExternalLink, Wallet, RefreshCw } from "lucide-react";
+import { formatIDR, shortAddr } from "@/lib/format";
 import { explorerUrl } from "@/lib/solana";
+import { useWallet } from "@/contexts/WalletContext";
 import { Navigate } from "react-router-dom";
 
 export default function Orders() {
@@ -50,6 +52,9 @@ export default function Orders() {
       <div className="container py-10">
         <h1 className="font-display text-3xl font-bold">Riwayat Transaksi</h1>
         <p className="text-muted-foreground mt-1">Semua pesanan Anda, fiat maupun crypto.</p>
+
+        <WalletPanel />
+
 
         {loading ? (
           <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin" /></div>
