@@ -103,3 +103,70 @@ export default function Orders() {
     </Layout>
   );
 }
+
+function WalletPanel() {
+  const { address, connect, connecting } = useWallet();
+  const [info, setInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const refresh = async () => {
+    if (!address) return;
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke("wallet-info", { body: { address } });
+    if (!error) setInfo(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { refresh(); /* eslint-disable-next-line */ }, [address]);
+
+  if (!address) {
+    return (
+      <Card className="mt-6 p-5 bg-gradient-card">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 font-display font-bold"><Wallet className="h-5 w-5 text-primary" /> Wallet Solana</div>
+            <p className="text-xs text-muted-foreground mt-1">Hubungkan wallet untuk melihat saldo dan riwayat on-chain.</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={connecting} onClick={() => connect("phantom")}>Phantom</Button>
+            <Button variant="outline" size="sm" disabled={connecting} onClick={() => connect("solflare")}>Solflare</Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="mt-6 p-5 bg-gradient-card">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 font-display font-bold"><Wallet className="h-5 w-5 text-primary" /> Wallet Solana <Badge variant="outline" className="border-success/40 text-success">Devnet</Badge></div>
+          <div className="font-mono text-xs text-muted-foreground mt-1">{shortAddr(address, 6)}</div>
+          <div className="mt-2 font-display text-2xl font-bold text-primary">
+            {info ? `${info.balanceSol?.toFixed(6)} SOL` : <Loader2 className="h-5 w-5 animate-spin" />}
+          </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Refresh
+        </Button>
+      </div>
+      {info?.transactions?.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <div className="text-xs font-semibold text-muted-foreground mb-2">10 Transaksi Terakhir</div>
+          <div className="space-y-1">
+            {info.transactions.map((t: any) => (
+              <a key={t.signature} href={explorerUrl(t.signature)} target="_blank" rel="noreferrer" className="flex items-center justify-between text-xs font-mono hover:bg-secondary/40 rounded px-2 py-1.5 transition-base">
+                <span className="truncate">{t.signature.slice(0, 16)}…</span>
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  {t.err ? <Badge variant="destructive" className="text-[10px]">err</Badge> : <Badge className="bg-success text-success-foreground text-[10px]">{t.confirmationStatus ?? "ok"}</Badge>}
+                  {t.blockTime ? new Date(t.blockTime * 1000).toLocaleDateString("id-ID") : ""}
+                  <ExternalLink className="h-3 w-3" />
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
