@@ -57,8 +57,8 @@ function Stats() {
     { icon: Wallet, label: "Pembayaran Crypto", value: s.crypto },
   ];
   return (
-  return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
 
       {cards.map((c) => (
         <Card key={c.label} className="p-5 bg-gradient-card">
