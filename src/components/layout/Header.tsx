@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Pill, ShoppingCart, Shield, LayoutDashboard, LogOut, User as UserIcon, Menu } from "lucide-react";
+import { Pill, ShoppingCart, LayoutDashboard, LogOut, User as UserIcon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/store/cart";
