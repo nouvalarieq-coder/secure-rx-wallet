@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Pill, ShoppingBag, Wallet, ShieldAlert, Loader2, Download, ChevronDown, ExternalLink, Anchor } from "lucide-react";
+import { Plus, Pencil, Trash2, Pill, ShoppingBag, Wallet, Loader2, Download, ChevronDown, ExternalLink, Anchor } from "lucide-react";
 import { formatIDR, shortAddr } from "@/lib/format";
 import { explorerUrl, sendMemo, sha256Hex } from "@/lib/solana";
 import { useWallet } from "@/contexts/WalletContext";
@@ -30,11 +30,9 @@ export default function Admin() {
           <TabsList>
             <TabsTrigger value="meds"><Pill className="h-4 w-4 mr-2" />Obat</TabsTrigger>
             <TabsTrigger value="orders"><ShoppingBag className="h-4 w-4 mr-2" />Transaksi</TabsTrigger>
-            <TabsTrigger value="reports"><ShieldAlert className="h-4 w-4 mr-2" />Laporan Palsu</TabsTrigger>
           </TabsList>
           <TabsContent value="meds"><MedicinesTab /></TabsContent>
           <TabsContent value="orders"><OrdersTab /></TabsContent>
-          <TabsContent value="reports"><ReportsTab /></TabsContent>
         </Tabs>
       </div>
     </Layout>
@@ -42,26 +40,26 @@ export default function Admin() {
 }
 
 function Stats() {
-  const [s, setS] = useState({ meds: 0, orders: 0, crypto: 0, reports: 0 });
+  const [s, setS] = useState({ meds: 0, orders: 0, crypto: 0 });
   useEffect(() => {
     (async () => {
-      const [m, o, c, r] = await Promise.all([
+      const [m, o, c] = await Promise.all([
         supabase.from("medicines").select("id", { count: "exact", head: true }),
         supabase.from("orders").select("id", { count: "exact", head: true }),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("payment_method", "crypto"),
-        supabase.from("fake_drug_reports").select("id", { count: "exact", head: true }),
       ]);
-      setS({ meds: m.count ?? 0, orders: o.count ?? 0, crypto: c.count ?? 0, reports: r.count ?? 0 });
+      setS({ meds: m.count ?? 0, orders: o.count ?? 0, crypto: c.count ?? 0 });
     })();
   }, []);
   const cards = [
     { icon: Pill, label: "Total Obat", value: s.meds },
     { icon: ShoppingBag, label: "Total Transaksi", value: s.orders },
     { icon: Wallet, label: "Pembayaran Crypto", value: s.crypto },
-    { icon: ShieldAlert, label: "Cek Keaslian", value: s.reports },
   ];
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+
       {cards.map((c) => (
         <Card key={c.label} className="p-5 bg-gradient-card">
           <div className="flex items-center gap-3">
@@ -375,34 +373,5 @@ function FragmentRow({ o, expanded, onToggle, status }: any) {
         </tr>
       )}
     </>
-  );
-}
-
-function ReportsTab() {
-  const [items, setItems] = useState<any[]>([]);
-  useEffect(() => { (async () => {
-    const { data } = await supabase.from("fake_drug_reports").select("*").order("created_at", { ascending: false }).limit(100);
-    setItems(data ?? []);
-  })(); }, []);
-  const badge = (r: string) => r === "asli" ? <Badge className="bg-success text-success-foreground">Asli</Badge> : r === "palsu" ? <Badge variant="destructive">Palsu</Badge> : <Badge className="bg-warning text-warning-foreground">Tdk Ditemukan</Badge>;
-  return (
-    <Card className="mt-4 p-5">
-      <h2 className="font-display font-bold mb-4">Log Pengecekan Obat</h2>
-      <div className="overflow-auto">
-        <table className="w-full text-sm">
-          <thead><tr className="text-left text-muted-foreground border-b border-border"><th className="py-2 pr-4">Tanggal</th><th className="pr-4">Tipe</th><th className="pr-4">Query</th><th>Hasil</th></tr></thead>
-          <tbody>
-            {items.map((r) => (
-              <tr key={r.id} className="border-b border-border/60">
-                <td className="py-3 pr-4">{new Date(r.created_at).toLocaleString("id-ID")}</td>
-                <td className="pr-4 uppercase text-xs">{r.query_type}</td>
-                <td className="pr-4 font-mono text-xs">{r.query_value}</td>
-                <td>{badge(r.result)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
   );
 }

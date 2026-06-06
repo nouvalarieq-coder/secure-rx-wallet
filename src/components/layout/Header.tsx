@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Pill, ShoppingCart, Shield, LayoutDashboard, LogOut, User as UserIcon, Menu } from "lucide-react";
+import { Pill, ShoppingCart, LayoutDashboard, LogOut, User as UserIcon, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/store/cart";
@@ -13,7 +13,6 @@ import WalletButton from "@/components/wallet/WalletButton";
 
 const links = [
   { to: "/marketplace", label: "Marketplace" },
-  { to: "/verify", label: "Cek Obat" },
   { to: "/orders", label: "Riwayat" },
 ];
 
@@ -70,9 +69,6 @@ export default function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/orders")}>
                   <ShoppingCart className="mr-2 h-4 w-4" /> Riwayat Transaksi
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/verify")}>
-                  <Shield className="mr-2 h-4 w-4" /> Cek Obat Palsu
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem onClick={() => navigate("/admin")}>
