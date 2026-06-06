@@ -144,7 +144,7 @@ function MedicinesTab() {
         <div className="overflow-auto">
           <table className="w-full text-sm">
             <thead><tr className="text-left text-muted-foreground border-b border-border">
-              <th className="py-2 pr-4">Nama</th><th className="pr-4">BPOM</th><th className="pr-4">Harga</th><th className="pr-4">Stok</th><th></th>
+              <th className="py-2 pr-4">Nama</th><th className="pr-4">BPOM</th><th className="pr-4">Harga</th><th className="pr-4">Stok</th><th className="pr-4">On-Chain</th><th></th>
             </tr></thead>
             <tbody>
               {items.map((m) => (
@@ -156,6 +156,9 @@ function MedicinesTab() {
                   <td className="pr-4 font-mono text-xs">{m.bpom_number}</td>
                   <td className="pr-4">{formatIDR(Number(m.price))}</td>
                   <td className="pr-4">{m.stock}</td>
+                  <td className="pr-4">
+                    <OnChainCell medicine={m} onUpdated={load} />
+                  </td>
                   <td className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => { setEditing(m); setForm(m); setOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => del(m.id)}><Trash2 className="h-4 w-4" /></Button>
@@ -167,6 +170,52 @@ function MedicinesTab() {
         </div>
       )}
     </Card>
+  );
+}
+
+function OnChainCell({ medicine, onUpdated }: { medicine: any; onUpdated: () => void }) {
+  const { address, walletName, connect } = useWallet();
+  const [busy, setBusy] = useState(false);
+
+  const record = async () => {
+    try {
+      if (!address || !walletName) {
+        await connect("phantom");
+        return toast.info("Wallet terhubung, klik lagi untuk mencatat.");
+      }
+      setBusy(true);
+      const payload = JSON.stringify({
+        id: medicine.id, name: medicine.name, bpom: medicine.bpom_number,
+        manufacturer: medicine.manufacturer, qr: medicine.qr_code,
+      });
+      const hash = await sha256Hex(payload);
+      const memo = `MediCryp|${medicine.bpom_number ?? medicine.id}|${hash}`;
+      const sig = await sendMemo({ walletName, fromPubkey: address, memo });
+      const { error } = await supabase.from("medicines").update({
+        onchain_hash: hash, onchain_signature: sig, onchain_recorded_at: new Date().toISOString(),
+      }).eq("id", medicine.id);
+      if (error) throw error;
+      toast.success("Hash tercatat di Solana devnet");
+      onUpdated();
+    } catch (e: any) {
+      toast.error(e.message ?? "Gagal mencatat on-chain");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (medicine.onchain_signature) {
+    return (
+      <a href={explorerUrl(medicine.onchain_signature)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-success hover:underline font-mono">
+        <Anchor className="h-3 w-3" /> {medicine.onchain_signature.slice(0, 8)}…<ExternalLink className="h-3 w-3" />
+      </a>
+    );
+  }
+  return (
+    <Button variant="outline" size="sm" disabled={busy} onClick={record}>
+      {busy ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Anchor className="h-3 w-3 mr-1" />}
+      Catat
+    </Button>
   );
 }
 
