@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Wallet, CreditCard, ShieldCheck, ExternalLink, CheckCircle2 } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { formatIDR, shortAddr } from "@/lib/format";
-import { connectWallet, idrToSol, IDR_PER_SOL, MERCHANT_WALLET, sendSolPayment, explorerUrl, verifyTransaction, WalletProvider } from "@/lib/solana";
+import { connectWallet, idrToSol, IDR_PER_SOL, MERCHANT_WALLET, sendSolPayment, explorerUrl, WalletProvider } from "@/lib/solana";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -84,14 +84,19 @@ export default function Checkout() {
         toast.success("Pembayaran berhasil");
       } else {
         if (!walletAddr) { toast.error("Hubungkan wallet terlebih dahulu"); setProcessing(false); return; }
+        // Create pending order first so we have an orderId for on-chain verification
+        const orderId = await createOrder("pending");
         toast.info("Mengirim transaksi ke Solana devnet…");
         const sig = await sendSolPayment({ walletName, fromPubkey: walletAddr, amountSol: totalSol });
-        toast.success("Transaksi terkirim, memverifikasi…");
-        const ok = await verifyTransaction(sig);
-        const id = await createOrder(ok ? "success" : "pending", sig);
+        toast.success("Transaksi terkirim, memverifikasi on-chain…");
+        // Server-side verification (checks recipient + amount, updates order status)
+        const { data: ver, error: verErr } = await supabase.functions.invoke("verify-solana-tx", {
+          body: { signature: sig, expectedAmountSol: totalSol, orderId },
+        });
+        if (verErr) console.error(verErr);
         clear();
-        setDone({ orderId: id, sig });
-        toast.success(ok ? "Pembayaran crypto terverifikasi!" : "Transaksi terkirim, menunggu konfirmasi");
+        setDone({ orderId, sig });
+        toast.success(ver?.ok ? "Pembayaran crypto terverifikasi on-chain!" : "Transaksi terkirim, menunggu konfirmasi");
       }
     } catch (e: any) {
       console.error(e);
