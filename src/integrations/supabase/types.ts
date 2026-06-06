@@ -63,6 +63,9 @@ export type Database = {
           is_active: boolean
           manufacturer: string | null
           name: string
+          onchain_hash: string | null
+          onchain_recorded_at: string | null
+          onchain_signature: string | null
           price: number
           qr_code: string | null
           requires_prescription: boolean
@@ -79,6 +82,9 @@ export type Database = {
           is_active?: boolean
           manufacturer?: string | null
           name: string
+          onchain_hash?: string | null
+          onchain_recorded_at?: string | null
+          onchain_signature?: string | null
           price?: number
           qr_code?: string | null
           requires_prescription?: boolean
@@ -95,6 +101,9 @@ export type Database = {
           is_active?: boolean
           manufacturer?: string | null
           name?: string
+          onchain_hash?: string | null
+          onchain_recorded_at?: string | null
+          onchain_signature?: string | null
           price?: number
           qr_code?: string | null
           requires_prescription?: boolean
