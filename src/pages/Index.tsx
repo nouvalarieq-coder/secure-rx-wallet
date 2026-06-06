@@ -32,7 +32,7 @@ type Medicine = {
 const features = [
   { icon: Shield, title: "Resmi BPOM", desc: "Setiap obat memiliki nomor izin BPOM yang dapat divalidasi." },
   { icon: Wallet, title: "Bayar Crypto Solana", desc: "Hubungkan Phantom atau Solflare. Transaksi diverifikasi blockchain." },
-  { icon: ScanLine, title: "Cek Obat Palsu", desc: "Scan QR code atau masukkan nomor BPOM untuk verifikasi instan." },
+  { icon: ScanLine, title: "Tercatat On-Chain", desc: "Setiap pembayaran tersimpan permanen di Solana devnet." },
 ];
 
 const steps = [
@@ -83,9 +83,6 @@ export default function Index() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" className="bg-gradient-primary shadow-lg-soft">
                 <Link to="/marketplace">Belanja Sekarang <ArrowRight className="ml-1 h-4 w-4" /></Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/verify">Cek Keaslian Obat</Link>
               </Button>
             </div>
             <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">

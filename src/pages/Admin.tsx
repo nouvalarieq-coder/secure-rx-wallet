@@ -30,11 +30,9 @@ export default function Admin() {
           <TabsList>
             <TabsTrigger value="meds"><Pill className="h-4 w-4 mr-2" />Obat</TabsTrigger>
             <TabsTrigger value="orders"><ShoppingBag className="h-4 w-4 mr-2" />Transaksi</TabsTrigger>
-            <TabsTrigger value="reports"><ShieldAlert className="h-4 w-4 mr-2" />Laporan Palsu</TabsTrigger>
           </TabsList>
           <TabsContent value="meds"><MedicinesTab /></TabsContent>
           <TabsContent value="orders"><OrdersTab /></TabsContent>
-          <TabsContent value="reports"><ReportsTab /></TabsContent>
         </Tabs>
       </div>
     </Layout>
@@ -42,26 +40,26 @@ export default function Admin() {
 }
 
 function Stats() {
-  const [s, setS] = useState({ meds: 0, orders: 0, crypto: 0, reports: 0 });
+  const [s, setS] = useState({ meds: 0, orders: 0, crypto: 0 });
   useEffect(() => {
     (async () => {
-      const [m, o, c, r] = await Promise.all([
+      const [m, o, c] = await Promise.all([
         supabase.from("medicines").select("id", { count: "exact", head: true }),
         supabase.from("orders").select("id", { count: "exact", head: true }),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("payment_method", "crypto"),
-        supabase.from("fake_drug_reports").select("id", { count: "exact", head: true }),
       ]);
-      setS({ meds: m.count ?? 0, orders: o.count ?? 0, crypto: c.count ?? 0, reports: r.count ?? 0 });
+      setS({ meds: m.count ?? 0, orders: o.count ?? 0, crypto: c.count ?? 0 });
     })();
   }, []);
   const cards = [
     { icon: Pill, label: "Total Obat", value: s.meds },
     { icon: ShoppingBag, label: "Total Transaksi", value: s.orders },
     { icon: Wallet, label: "Pembayaran Crypto", value: s.crypto },
-    { icon: ShieldAlert, label: "Cek Keaslian", value: s.reports },
   ];
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
       {cards.map((c) => (
         <Card key={c.label} className="p-5 bg-gradient-card">
           <div className="flex items-center gap-3">
