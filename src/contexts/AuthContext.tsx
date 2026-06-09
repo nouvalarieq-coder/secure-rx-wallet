@@ -18,6 +18,23 @@ const Ctx = createContext<AuthCtx>({
   signOut: async () => {},
 });
 
+// Hardcoded admin user for demo/testing
+const ADMIN_FAKE_USER: User = {
+  id: "admin-hardcoded",
+  email: "admin@medicryp.local",
+  app_metadata: {},
+  user_metadata: {},
+  aud: "authenticated",
+  created_at: new Date().toISOString(),
+  role: "authenticated",
+  updated_at: new Date().toISOString(),
+  phone: "",
+  confirmed_at: new Date().toISOString(),
+  last_sign_in_at: new Date().toISOString(),
+  identities: [],
+  factors: [],
+} as unknown as User;
+
 async function ensureProfile(user: User) {
   const { data: existing } = await supabase
     .from("profiles")
@@ -51,6 +68,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Check hardcoded admin session first
+    const adminSession = localStorage.getItem("admin_session");
+    if (adminSession === "1") {
+      setUser(ADMIN_FAKE_USER);
+      setIsAdmin(true);
+      setLoading(false);
+      return;
+    }
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
       setUser(s?.user ?? null);
@@ -77,7 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    localStorage.removeItem("admin_session");
     await supabase.auth.signOut();
+    setUser(null);
+    setIsAdmin(false);
   };
 
   return (
