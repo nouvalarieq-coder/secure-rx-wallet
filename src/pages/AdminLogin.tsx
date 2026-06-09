@@ -18,6 +18,15 @@ export default function AdminLogin() {
 
   const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Hardcoded admin bypass (testing/demo)
+    if (email.trim() === "admin" && pw === "admin123") {
+      localStorage.setItem("admin_session", "1");
+      toast.success("Selamat datang, Admin");
+      navigate("/admin");
+      return;
+    }
+
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
     if (error || !data.user) {
@@ -55,8 +64,8 @@ export default function AdminLogin() {
         <Card className="p-6 shadow-md-soft">
           <form onSubmit={onLogin} className="space-y-4">
             <div>
-              <Label>Email Admin</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Label>Email / Username Admin</Label>
+              <Input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div>
               <Label>Password</Label>
