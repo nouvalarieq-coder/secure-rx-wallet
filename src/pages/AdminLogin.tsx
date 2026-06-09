@@ -18,6 +18,15 @@ export default function AdminLogin() {
 
   const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Hardcoded admin bypass (testing/demo)
+    if (email.trim() === "admin" && pw === "admin123") {
+      localStorage.setItem("admin_session", "1");
+      toast.success("Selamat datang, Admin");
+      navigate("/admin");
+      return;
+    }
+
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
     if (error || !data.user) {
