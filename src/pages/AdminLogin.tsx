@@ -64,8 +64,8 @@ export default function AdminLogin() {
         <Card className="p-6 shadow-md-soft">
           <form onSubmit={onLogin} className="space-y-4">
             <div>
-              <Label>Email Admin</Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Label>Email / Username Admin</Label>
+              <Input type="text" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div>
               <Label>Password</Label>
