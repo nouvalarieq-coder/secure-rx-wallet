@@ -23,7 +23,8 @@ export default function AdminLogin() {
     if (email.trim() === "admin" && pw === "admin123") {
       localStorage.setItem("admin_session", "1");
       toast.success("Selamat datang, Admin");
-      navigate("/admin");
+      // Hard redirect so AuthProvider re-initializes with admin session
+      window.location.href = "/admin";
       return;
     }
 
