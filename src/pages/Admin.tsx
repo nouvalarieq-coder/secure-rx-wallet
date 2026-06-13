@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Pill, ShoppingBag, Wallet, Loader2, Download, ChevronDown, ExternalLink, Anchor } from "lucide-react";
+import { Plus, Pencil, Trash2, Pill, ShoppingBag, Wallet, Loader2, Download, ChevronDown, ExternalLink, Anchor, Inbox, Users, Check, X } from "lucide-react";
 import { formatIDR, shortAddr } from "@/lib/format";
 import { explorerUrl, sendMemo, sha256Hex } from "@/lib/solana";
 import { useWallet } from "@/contexts/WalletContext";
@@ -29,10 +29,14 @@ export default function Admin() {
         <Tabs defaultValue="meds" className="mt-8">
           <TabsList>
             <TabsTrigger value="meds"><Pill className="h-4 w-4 mr-2" />Obat</TabsTrigger>
+            <TabsTrigger value="pending"><Inbox className="h-4 w-4 mr-2" />Pengajuan</TabsTrigger>
             <TabsTrigger value="orders"><ShoppingBag className="h-4 w-4 mr-2" />Transaksi</TabsTrigger>
+            <TabsTrigger value="users"><Users className="h-4 w-4 mr-2" />Pengguna</TabsTrigger>
           </TabsList>
           <TabsContent value="meds"><MedicinesTab /></TabsContent>
+          <TabsContent value="pending"><PendingTab /></TabsContent>
           <TabsContent value="orders"><OrdersTab /></TabsContent>
+          <TabsContent value="users"><UsersTab /></TabsContent>
         </Tabs>
       </div>
     </Layout>
