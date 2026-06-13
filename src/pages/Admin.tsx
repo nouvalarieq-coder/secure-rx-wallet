@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Pill, ShoppingBag, Wallet, Loader2, Download, ChevronDown, ExternalLink, Anchor } from "lucide-react";
+import { Plus, Pencil, Trash2, Pill, ShoppingBag, Wallet, Loader2, Download, ChevronDown, ExternalLink, Anchor, Inbox, Users, Check, X } from "lucide-react";
 import { formatIDR, shortAddr } from "@/lib/format";
 import { explorerUrl, sendMemo, sha256Hex } from "@/lib/solana";
 import { useWallet } from "@/contexts/WalletContext";
@@ -29,10 +29,14 @@ export default function Admin() {
         <Tabs defaultValue="meds" className="mt-8">
           <TabsList>
             <TabsTrigger value="meds"><Pill className="h-4 w-4 mr-2" />Obat</TabsTrigger>
+            <TabsTrigger value="pending"><Inbox className="h-4 w-4 mr-2" />Pengajuan</TabsTrigger>
             <TabsTrigger value="orders"><ShoppingBag className="h-4 w-4 mr-2" />Transaksi</TabsTrigger>
+            <TabsTrigger value="users"><Users className="h-4 w-4 mr-2" />Pengguna</TabsTrigger>
           </TabsList>
           <TabsContent value="meds"><MedicinesTab /></TabsContent>
+          <TabsContent value="pending"><PendingTab /></TabsContent>
           <TabsContent value="orders"><OrdersTab /></TabsContent>
+          <TabsContent value="users"><UsersTab /></TabsContent>
         </Tabs>
       </div>
     </Layout>
@@ -373,5 +377,147 @@ function FragmentRow({ o, expanded, onToggle, status }: any) {
         </tr>
       )}
     </>
+  );
+}
+
+function PendingTab() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("medicines")
+      .select("*")
+      .eq("approval_status", "pending")
+      .order("created_at", { ascending: false });
+    let rows = data ?? [];
+    const ids = Array.from(new Set(rows.map((r: any) => r.submitted_by).filter(Boolean)));
+    if (ids.length) {
+      const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+      const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      rows = rows.map((r: any) => ({ ...r, profile: map.get(r.submitted_by) }));
+    }
+    setItems(rows);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const approve = async (id: string) => {
+    const { error } = await supabase.from("medicines").update({
+      approval_status: "approved", is_active: true,
+    }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Obat disetujui & ditayangkan");
+    load();
+  };
+  const reject = async (id: string) => {
+    if (!confirm("Tolak pengajuan ini?")) return;
+    const { error } = await supabase.from("medicines").update({
+      approval_status: "rejected", is_active: false,
+    }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Pengajuan ditolak");
+    load();
+  };
+
+  return (
+    <Card className="mt-4 p-5">
+      <h2 className="font-display font-bold mb-4">Pengajuan Obat dari Pengguna</h2>
+      {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto my-8" /> : items.length === 0 ? (
+        <div className="text-center text-muted-foreground py-10 text-sm">Tidak ada pengajuan menunggu.</div>
+      ) : (
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-muted-foreground border-b border-border">
+              <th className="py-2 pr-4">Nama</th><th className="pr-4">Pengaju</th><th className="pr-4">BPOM</th><th className="pr-4">Harga</th><th className="pr-4">Stok</th><th className="pr-4">Tanggal</th><th></th>
+            </tr></thead>
+            <tbody>
+              {items.map((m) => (
+                <tr key={m.id} className="border-b border-border/60">
+                  <td className="py-3 pr-4">
+                    <div className="font-medium">{m.name}</div>
+                    <div className="text-xs text-muted-foreground line-clamp-1 max-w-xs">{m.description}</div>
+                  </td>
+                  <td className="pr-4">{m.profile?.full_name ?? <span className="text-muted-foreground">-</span>}</td>
+                  <td className="pr-4 font-mono text-xs">{m.bpom_number ?? "-"}</td>
+                  <td className="pr-4">{formatIDR(Number(m.price))}</td>
+                  <td className="pr-4">{m.stock}</td>
+                  <td className="pr-4 text-xs text-muted-foreground">{new Date(m.created_at).toLocaleDateString("id-ID")}</td>
+                  <td className="text-right whitespace-nowrap">
+                    <Button size="sm" variant="default" onClick={() => approve(m.id)} className="mr-2">
+                      <Check className="h-4 w-4 mr-1" />Setujui
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => reject(m.id)}>
+                      <X className="h-4 w-4 mr-1" />Tolak
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function UsersTab() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const [{ data: profs }, { data: roles }] = await Promise.all([
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("user_id, role"),
+      ]);
+      const rolesByUser = new Map<string, string[]>();
+      (roles ?? []).forEach((r: any) => {
+        const arr = rolesByUser.get(r.user_id) ?? [];
+        arr.push(r.role);
+        rolesByUser.set(r.user_id, arr);
+      });
+      setUsers((profs ?? []).map((p: any) => ({ ...p, roles: rolesByUser.get(p.id) ?? [] })));
+      setLoading(false);
+    })();
+  }, []);
+
+  return (
+    <Card className="mt-4 p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display font-bold">Pengguna Terdaftar</h2>
+        <span className="text-sm text-muted-foreground">{users.length} pengguna</span>
+      </div>
+      {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto my-8" /> : users.length === 0 ? (
+        <div className="text-center text-muted-foreground py-10 text-sm">Belum ada pengguna.</div>
+      ) : (
+        <div className="overflow-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-muted-foreground border-b border-border">
+              <th className="py-2 pr-4">Nama</th><th className="pr-4">User ID</th><th className="pr-4">Wallet</th><th className="pr-4">Peran</th><th className="pr-4">Terdaftar</th>
+            </tr></thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id} className="border-b border-border/60">
+                  <td className="py-3 pr-4 font-medium">{u.full_name ?? "-"}</td>
+                  <td className="pr-4 font-mono text-xs text-muted-foreground">{u.id.slice(0, 8)}…</td>
+                  <td className="pr-4 font-mono text-xs">{u.wallet_address ? shortAddr(u.wallet_address, 6) : <span className="text-muted-foreground">-</span>}</td>
+                  <td className="pr-4">
+                    {u.roles.length === 0 ? <span className="text-muted-foreground text-xs">-</span> :
+                      u.roles.map((r: string) => (
+                        <Badge key={r} variant={r === "admin" ? "default" : "outline"} className="mr-1 capitalize">{r}</Badge>
+                      ))
+                    }
+                  </td>
+                  <td className="pr-4 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString("id-ID")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Card>
   );
 }

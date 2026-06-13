@@ -54,6 +54,7 @@ export type Database = {
       }
       medicines: {
         Row: {
+          approval_status: string
           bpom_number: string | null
           category: string | null
           created_at: string
@@ -70,9 +71,11 @@ export type Database = {
           qr_code: string | null
           requires_prescription: boolean
           stock: number
+          submitted_by: string | null
           updated_at: string
         }
         Insert: {
+          approval_status?: string
           bpom_number?: string | null
           category?: string | null
           created_at?: string
@@ -89,9 +92,11 @@ export type Database = {
           qr_code?: string | null
           requires_prescription?: boolean
           stock?: number
+          submitted_by?: string | null
           updated_at?: string
         }
         Update: {
+          approval_status?: string
           bpom_number?: string | null
           category?: string | null
           created_at?: string
@@ -108,6 +113,7 @@ export type Database = {
           qr_code?: string | null
           requires_prescription?: boolean
           stock?: number
+          submitted_by?: string | null
           updated_at?: string
         }
         Relationships: []

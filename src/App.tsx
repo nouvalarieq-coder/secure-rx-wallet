@@ -14,6 +14,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import SubmitMedicine from "./pages/SubmitMedicine";
 
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
             <Route path="/orders" element={<RequireAuth><Orders /></RequireAuth>} />
+            <Route path="/submit-medicine" element={<RequireAuth><SubmitMedicine /></RequireAuth>} />
             
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
