@@ -14,6 +14,7 @@ import WalletButton from "@/components/wallet/WalletButton";
 const links = [
   { to: "/marketplace", label: "Marketplace" },
   { to: "/orders", label: "Riwayat" },
+  { to: "/submit-medicine", label: "Ajukan Obat" },
 ];
 
 export default function Header() {
