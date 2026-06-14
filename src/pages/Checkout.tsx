@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Wallet, CreditCard, ShieldCheck, ExternalLink, CheckCircle2 } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { formatIDR, shortAddr } from "@/lib/format";
-import { connectWallet, idrToSol, IDR_PER_SOL, MERCHANT_WALLET, sendSolPayment, explorerUrl, WalletProvider } from "@/lib/solana";
+import { connectWallet, idrToSol, IDR_PER_SOL, MERCHANT_WALLET, sendSolPayment, sendMemo, sha256Hex, explorerUrl, WalletProvider } from "@/lib/solana";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
