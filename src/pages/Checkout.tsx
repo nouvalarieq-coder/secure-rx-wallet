@@ -72,28 +72,47 @@ export default function Checkout() {
     return order.id as string;
   };
 
+  const recordMemo = async (orderId: string, addr: string, wname: WalletProvider) => {
+    const payload = JSON.stringify({
+      orderId,
+      total: totalIdr,
+      method,
+      items: items.map((i) => ({ id: i.id, qty: i.quantity, price: i.price })),
+      ts: Date.now(),
+    });
+    const hash = await sha256Hex(payload);
+    const memo = `MediCryp|ORDER|${orderId.slice(0, 8)}|${method}|${hash}`;
+    const sig = await sendMemo({ walletName: wname, fromPubkey: addr, memo });
+    await supabase.from("orders").update({ memo_signature: sig }).eq("id", orderId);
+    return sig;
+  };
+
   const onCheckout = async () => {
     if (!shipping.trim()) return toast.error("Mohon isi alamat pengiriman");
+    if (!walletAddr) return toast.error("Hubungkan wallet Solana terlebih dahulu — semua transaksi dicatat on-chain");
     setProcessing(true);
     try {
       if (method === "fiat") {
-        // Simulate fiat payment success
         const id = await createOrder("success");
+        toast.info("Mencatat transaksi ke Solana devnet…");
+        let memoSig: string | undefined;
+        try { memoSig = await recordMemo(id, walletAddr, walletName); } catch (e: any) {
+          console.error(e); toast.error("Pembayaran sukses tapi gagal catat memo: " + e.message);
+        }
         clear();
-        setDone({ orderId: id });
-        toast.success("Pembayaran berhasil");
+        setDone({ orderId: id, sig: memoSig });
+        toast.success("Pembayaran berhasil & tercatat on-chain");
       } else {
-        if (!walletAddr) { toast.error("Hubungkan wallet terlebih dahulu"); setProcessing(false); return; }
         // Create pending order first so we have an orderId for on-chain verification
         const orderId = await createOrder("pending");
         toast.info("Mengirim transaksi ke Solana devnet…");
         const sig = await sendSolPayment({ walletName, fromPubkey: walletAddr, amountSol: totalSol });
         toast.success("Transaksi terkirim, memverifikasi on-chain…");
-        // Server-side verification (checks recipient + amount, updates order status)
         const { data: ver, error: verErr } = await supabase.functions.invoke("verify-solana-tx", {
           body: { signature: sig, expectedAmountSol: totalSol, orderId },
         });
         if (verErr) console.error(verErr);
+        try { await recordMemo(orderId, walletAddr, walletName); } catch (e) { console.error(e); }
         clear();
         setDone({ orderId, sig });
         toast.success(ver?.ok ? "Pembayaran crypto terverifikasi on-chain!" : "Transaksi terkirim, menunggu konfirmasi");
