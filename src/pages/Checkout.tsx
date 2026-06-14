@@ -211,8 +211,35 @@ export default function Checkout() {
                   )}
                 </div>
               )}
+
+              {method === "fiat" && (
+                <div className="mt-6 space-y-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <Anchor className="h-4 w-4" />Pencatatan On-Chain (Wajib)
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Semua transaksi MediCryp dicatat sebagai memo di Solana devnet sebagai bukti audit. Hubungkan wallet untuk menandatangani memo (tanpa biaya pembayaran).
+                  </p>
+                  {!walletAddr ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button variant="outline" size="sm" onClick={() => onConnect("phantom")}>
+                        <Wallet className="h-4 w-4 mr-2" />Phantom
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => onConnect("solflare")}>
+                        <Wallet className="h-4 w-4 mr-2" />Solflare
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg bg-success/10 border border-success/30 p-2 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-success font-semibold"><ShieldCheck className="h-4 w-4" />Wallet siap: <span className="font-mono text-muted-foreground ml-1">{shortAddr(walletAddr, 6)}</span></div>
+                      <Button variant="ghost" size="sm" onClick={() => setWalletAddr("")}>Ganti</Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           </div>
+
 
           <Card className="p-6 h-fit shadow-md-soft">
             <h2 className="font-display text-lg font-bold">Pesanan Anda</h2>
