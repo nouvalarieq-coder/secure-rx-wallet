@@ -465,22 +465,24 @@ function PendingTab() {
 function UsersTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [{ data: profs }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("user_id, role"),
-      ]);
-      const rolesByUser = new Map<string, string[]>();
-      (roles ?? []).forEach((r: any) => {
-        const arr = rolesByUser.get(r.user_id) ?? [];
-        arr.push(r.role);
-        rolesByUser.set(r.user_id, arr);
-      });
-      setUsers((profs ?? []).map((p: any) => ({ ...p, roles: rolesByUser.get(p.id) ?? [] })));
-      setLoading(false);
+      setError(null);
+      try {
+        const { data, error } = await supabase.functions.invoke("list-users", {
+          headers: { "x-admin-pass": "admin123" },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        setUsers(data?.users ?? []);
+      } catch (e: any) {
+        setError(e.message ?? "Gagal memuat pengguna");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -490,19 +492,30 @@ function UsersTab() {
         <h2 className="font-display font-bold">Pengguna Terdaftar</h2>
         <span className="text-sm text-muted-foreground">{users.length} pengguna</span>
       </div>
-      {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto my-8" /> : users.length === 0 ? (
+      <div className="mb-3 text-xs text-muted-foreground rounded-md border border-border bg-secondary/40 p-2">
+        🔒 Password disimpan ter-hash (bcrypt) oleh sistem auth dan tidak dapat ditampilkan — ini standar keamanan dan tidak bisa di-bypass. Admin hanya bisa melihat email, wallet, peran, dan aktivitas akun.
+      </div>
+      {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto my-8" /> :
+       error ? <div className="text-center text-destructive py-6 text-sm">{error}</div> :
+       users.length === 0 ? (
         <div className="text-center text-muted-foreground py-10 text-sm">Belum ada pengguna.</div>
       ) : (
         <div className="overflow-auto">
           <table className="w-full text-sm">
             <thead><tr className="text-left text-muted-foreground border-b border-border">
-              <th className="py-2 pr-4">Nama</th><th className="pr-4">User ID</th><th className="pr-4">Wallet</th><th className="pr-4">Peran</th><th className="pr-4">Terdaftar</th>
+              <th className="py-2 pr-4">Nama</th>
+              <th className="pr-4">Email</th>
+              <th className="pr-4">Wallet</th>
+              <th className="pr-4">Peran</th>
+              <th className="pr-4">Status</th>
+              <th className="pr-4">Terdaftar</th>
+              <th className="pr-4">Login Terakhir</th>
             </tr></thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id} className="border-b border-border/60">
                   <td className="py-3 pr-4 font-medium">{u.full_name ?? "-"}</td>
-                  <td className="pr-4 font-mono text-xs text-muted-foreground">{u.id.slice(0, 8)}…</td>
+                  <td className="pr-4 text-xs">{u.email ?? "-"}</td>
                   <td className="pr-4 font-mono text-xs">{u.wallet_address ? shortAddr(u.wallet_address, 6) : <span className="text-muted-foreground">-</span>}</td>
                   <td className="pr-4">
                     {u.roles.length === 0 ? <span className="text-muted-foreground text-xs">-</span> :
@@ -511,7 +524,13 @@ function UsersTab() {
                       ))
                     }
                   </td>
+                  <td className="pr-4 text-xs">
+                    {u.email_confirmed_at
+                      ? <Badge className="bg-success text-success-foreground">Terverifikasi</Badge>
+                      : <Badge variant="outline">Belum verifikasi</Badge>}
+                  </td>
                   <td className="pr-4 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString("id-ID")}</td>
+                  <td className="pr-4 text-xs text-muted-foreground">{u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString("id-ID") : "-"}</td>
                 </tr>
               ))}
             </tbody>
