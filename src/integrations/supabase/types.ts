@@ -167,6 +167,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          memo_signature: string | null
           payment_method: string
           payment_status: string
           shipping_address: string | null
@@ -179,6 +180,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          memo_signature?: string | null
           payment_method: string
           payment_status?: string
           shipping_address?: string | null
@@ -191,6 +193,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          memo_signature?: string | null
           payment_method?: string
           payment_status?: string
           shipping_address?: string | null
