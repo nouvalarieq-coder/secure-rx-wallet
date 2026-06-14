@@ -365,9 +365,17 @@ function FragmentRow({ o, expanded, onToggle, status }: any) {
                 )}
                 {o.tx_signature && (
                   <div>
-                    <span className="text-muted-foreground">TX: </span>
+                    <span className="text-muted-foreground">TX Bayar: </span>
                     <a href={explorerUrl(o.tx_signature)} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 font-mono">
                       {shortAddr(o.tx_signature, 8)} <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+                {o.memo_signature && (
+                  <div>
+                    <span className="text-muted-foreground">Memo On-Chain: </span>
+                    <a href={explorerUrl(o.memo_signature)} target="_blank" rel="noreferrer" className="text-success hover:underline inline-flex items-center gap-1 font-mono">
+                      <Anchor className="h-3 w-3" />{shortAddr(o.memo_signature, 8)} <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>
                 )}
