@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Wallet, CreditCard, ShieldCheck, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Loader2, Wallet, CreditCard, ShieldCheck, ExternalLink, CheckCircle2, Anchor } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { formatIDR, shortAddr } from "@/lib/format";
 import { connectWallet, idrToSol, IDR_PER_SOL, MERCHANT_WALLET, sendSolPayment, sendMemo, sha256Hex, explorerUrl, WalletProvider } from "@/lib/solana";
