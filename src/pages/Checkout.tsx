@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Wallet, CreditCard, ShieldCheck, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Loader2, Wallet, CreditCard, ShieldCheck, ExternalLink, CheckCircle2, Anchor } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { formatIDR, shortAddr } from "@/lib/format";
-import { connectWallet, idrToSol, IDR_PER_SOL, MERCHANT_WALLET, sendSolPayment, explorerUrl, WalletProvider } from "@/lib/solana";
+import { connectWallet, idrToSol, IDR_PER_SOL, MERCHANT_WALLET, sendSolPayment, sendMemo, sha256Hex, explorerUrl, WalletProvider } from "@/lib/solana";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -72,28 +72,47 @@ export default function Checkout() {
     return order.id as string;
   };
 
+  const recordMemo = async (orderId: string, addr: string, wname: WalletProvider) => {
+    const payload = JSON.stringify({
+      orderId,
+      total: totalIdr,
+      method,
+      items: items.map((i) => ({ id: i.id, qty: i.quantity, price: i.price })),
+      ts: Date.now(),
+    });
+    const hash = await sha256Hex(payload);
+    const memo = `MediCryp|ORDER|${orderId.slice(0, 8)}|${method}|${hash}`;
+    const sig = await sendMemo({ walletName: wname, fromPubkey: addr, memo });
+    await supabase.from("orders").update({ memo_signature: sig }).eq("id", orderId);
+    return sig;
+  };
+
   const onCheckout = async () => {
     if (!shipping.trim()) return toast.error("Mohon isi alamat pengiriman");
+    if (!walletAddr) return toast.error("Hubungkan wallet Solana terlebih dahulu — semua transaksi dicatat on-chain");
     setProcessing(true);
     try {
       if (method === "fiat") {
-        // Simulate fiat payment success
         const id = await createOrder("success");
+        toast.info("Mencatat transaksi ke Solana devnet…");
+        let memoSig: string | undefined;
+        try { memoSig = await recordMemo(id, walletAddr, walletName); } catch (e: any) {
+          console.error(e); toast.error("Pembayaran sukses tapi gagal catat memo: " + e.message);
+        }
         clear();
-        setDone({ orderId: id });
-        toast.success("Pembayaran berhasil");
+        setDone({ orderId: id, sig: memoSig });
+        toast.success("Pembayaran berhasil & tercatat on-chain");
       } else {
-        if (!walletAddr) { toast.error("Hubungkan wallet terlebih dahulu"); setProcessing(false); return; }
         // Create pending order first so we have an orderId for on-chain verification
         const orderId = await createOrder("pending");
         toast.info("Mengirim transaksi ke Solana devnet…");
         const sig = await sendSolPayment({ walletName, fromPubkey: walletAddr, amountSol: totalSol });
         toast.success("Transaksi terkirim, memverifikasi on-chain…");
-        // Server-side verification (checks recipient + amount, updates order status)
         const { data: ver, error: verErr } = await supabase.functions.invoke("verify-solana-tx", {
           body: { signature: sig, expectedAmountSol: totalSol, orderId },
         });
         if (verErr) console.error(verErr);
+        try { await recordMemo(orderId, walletAddr, walletName); } catch (e) { console.error(e); }
         clear();
         setDone({ orderId, sig });
         toast.success(ver?.ok ? "Pembayaran crypto terverifikasi on-chain!" : "Transaksi terkirim, menunggu konfirmasi");
@@ -192,8 +211,35 @@ export default function Checkout() {
                   )}
                 </div>
               )}
+
+              {method === "fiat" && (
+                <div className="mt-6 space-y-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <Anchor className="h-4 w-4" />Pencatatan On-Chain (Wajib)
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Semua transaksi MediCryp dicatat sebagai memo di Solana devnet sebagai bukti audit. Hubungkan wallet untuk menandatangani memo (tanpa biaya pembayaran).
+                  </p>
+                  {!walletAddr ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button variant="outline" size="sm" onClick={() => onConnect("phantom")}>
+                        <Wallet className="h-4 w-4 mr-2" />Phantom
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => onConnect("solflare")}>
+                        <Wallet className="h-4 w-4 mr-2" />Solflare
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg bg-success/10 border border-success/30 p-2 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-success font-semibold"><ShieldCheck className="h-4 w-4" />Wallet siap: <span className="font-mono text-muted-foreground ml-1">{shortAddr(walletAddr, 6)}</span></div>
+                      <Button variant="ghost" size="sm" onClick={() => setWalletAddr("")}>Ganti</Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           </div>
+
 
           <Card className="p-6 h-fit shadow-md-soft">
             <h2 className="font-display text-lg font-bold">Pesanan Anda</h2>
